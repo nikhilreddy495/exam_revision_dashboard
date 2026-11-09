@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DAA Mission Control - Revision Dashboard</title>
+<style>
+:root{--bg:#0a0f1f;--panel:#131a33;--line:#27316b;--ink:#e9edff;--mute:#9aa6d1;--a:#ffb703;--b:#4cc9f0;--c:#f72585;--ok:#3ddc97;--bad:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(900px 500px at 10% -10%,#3a2a8a44,transparent),radial-gradient(700px 400px at 110% 20%,#4cc9f018,transparent),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px;min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:clamp(24px,5vw,40px);margin:.2em 0 0}
+h1 span{background:linear-gradient(90deg,var(--b),var(--a),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mute);margin:.2em 0 14px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.card h2{margin:0 0 10px;font-size:16px;letter-spacing:.08em;text-transform:uppercase;color:var(--b)}
+button{font:inherit;color:var(--ink);background:#1c2550;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--b)}button.on{background:var(--b);color:#06101f;font-weight:700;border-color:var(--b)}
+input[type=date]{background:#0e1430;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px;font:inherit;color-scheme:dark}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cd{display:flex;gap:8px;margin:10px 0}
+.cd div{flex:1;background:#0e1430;border:1px solid var(--line);border-radius:12px;text-align:center;padding:10px 4px}
+.cd b{display:block;font-size:clamp(22px,5vw,32px);color:var(--a);font-variant-numeric:tabular-nums}
+.cd small{color:var(--mute);font-size:11px;letter-spacing:.1em}
+.ring{position:relative;width:130px;height:130px;margin:0 auto}
+.ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800}
+.grp{margin:10px 0 2px;font-size:12px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase}
+label.t{display:flex;gap:10px;align-items:center;padding:8px 6px;border-radius:8px;cursor:pointer;font-size:15px}
+label.t:hover{background:#1a2347}label.t input{width:18px;height:18px;accent-color:var(--ok)}
+label.t.done span{text-decoration:line-through;color:var(--mute)}
+.fc{perspective:900px;height:200px;margin:12px 0;cursor:pointer}
+.fc .in{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d}
+.fc.flip .in{transform:rotateY(180deg)}
+.fc .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:14px;padding:18px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border:1px solid var(--line);overflow:auto}
+.fc .front{background:linear-gradient(135deg,#1b2a66,#22174f);font-size:clamp(17px,3vw,20px);font-weight:600}
+.fc .back{background:linear-gradient(135deg,#0f3b4a,#14304f);transform:rotateY(180deg);font-size:clamp(15px,2.6vw,18px)}
+.fc small{position:absolute;top:8px;left:12px;color:var(--a);font-size:11px;letter-spacing:.1em}
+.opt{display:block;width:100%;text-align:left;margin:7px 0}
+.opt.right{background:#103d2c;border-color:var(--ok)}.opt.wrong{background:#4a1c1c;border-color:var(--bad)}
+.big{font-size:clamp(26px,6vw,42px);font-weight:800}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.mute{color:var(--mute);font-size:13px}
+.bar{height:8px;background:#0e1430;border-radius:6px;overflow:hidden;margin:8px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--b),var(--ok));width:0;transition:width .3s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>DAA <span>Mission Control</span></h1>
+  <p class="sub">Revision dashboard for Design &amp; Analysis of Algorithms: tick topics, watch the countdown, flip cards, take the scored quiz. Progress saves in this browser.</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Countdown</h2>
+      <div class="row"><label for="exam" class="mute">Exam date</label><input type="date" id="exam"></div>
+      <div class="cd"><div><b id="cd-d">0</b><small>DAYS</small></div><div><b id="cd-h">0</b><small>HRS</small></div><div><b id="cd-m">0</b><small>MIN</small></div><div><b id="cd-s">0</b><small>SEC</small></div></div>
+      <p class="mute" id="cd-msg"></p>
+    </section>
+
+    <section class="card">
+      <h2>Syllabus tracker</h2>
+      <div class="ring"><svg viewBox="0 0 120 120" width="130" height="130"><circle cx="60" cy="60" r="50" fill="none" stroke="#0e1430" stroke-width="12"/><circle id="arc" cx="60" cy="60" r="50" fill="none" stroke="#3ddc97" stroke-width="12" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset .4s"/></svg><span id="pct">0%</span></div>
+      <p class="mute" style="text-align:center" id="pcttxt"></p>
+      <div class="row" style="justify-content:center"><button id="all">Tick all</button><button id="none">Reset ticks</button></div>
+      <div id="topics"></div>
+    </section>
+
+    <section class="card">
+      <h2>Flip cards</h2>
+      <div class="row" id="chips"></div>
+      <div class="fc" id="fc"><div class="in"><div class="face front"><small id="fcat"></small><div id="fq"></div></div><div class="face back"><div id="fa"></div></div></div></div>
+      <div class="row" style="justify-content:space-between">
+        <div class="row"><button id="fprev">←</button><button id="fnext">→</button><button id="fshuf">🔀 Shuffle</button></div>
+        <button id="fknow">✓ I know this</button>
+      </div>
+      <p class="mute" id="fstat"></p>
+      <div class="bar"><i id="fbar"></i></div>
+      <p class="mute">Click the card or press Space to flip. Arrow keys move between cards.</p>
+    </section>
+
+    <section class="card">
+      <h2>Scored quiz</h2>
+      <div id="qbox"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+/* safe storage */
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---- countdown ---- */
+const pad=n=>String(n).padStart(2,'0');
+const isoDate=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+let examVal=store.get('daa_exam',null);
+if(!examVal){const d=new Date();d.setDate(d.getDate()+14);examVal=isoDate(d)}
+$('#exam').value=examVal;
+$('#exam').addEventListener('change',e=>{examVal=e.target.value;store.set('daa_exam',examVal);tick()});
+function tick(){
+  if(!examVal){$('#cd-msg').textContent='Pick a date.';return}
+  const t=new Date(examVal+'T09:00:00').getTime()-Date.now();
+  if(t<=0){['d','h','m','s'].forEach(x=>$('#cd-'+x).textContent='0');$('#cd-msg').textContent='That date has passed. Pick the next exam date.';return}
+  const d=Math.floor(t/864e5),h=Math.floor(t/36e5)%24,m=Math.floor(t/6e4)%60,s=Math.floor(t/1e3)%60;
+  $('#cd-d').textContent=d;$('#cd-h').textContent=pad(h);$('#cd-m').textContent=pad(m);$('#cd-s').textContent=pad(s);
+  $('#cd-msg').textContent=d>10?'Plenty of time. Plan a topic a day.':d>3?'Revision sprint: cards + quiz daily.':'Final stretch. Focus on weak topics.';
+}
+setInterval(tick,1000);tick();
+
+/* ---- topics ---- */
+const TOPICS={'Divide & Conquer':['Merge sort &amp; recurrences','Quick sort &amp; analysis','Master theorem','Strassen matrix multiplication'],
+ 'Greedy':['Activity selection &amp; fractional knapsack','Huffman coding','MST: Kruskal &amp; Prim'],
+ 'Dynamic Programming':['0/1 knapsack','Longest common subsequence','Matrix chain multiplication'],
+ 'Graphs':['BFS / DFS','Dijkstra &amp; Bellman-Ford','Floyd-Warshall'],
+ 'Backtracking &amp; Complexity':['N-Queens / subset sum','Asymptotic notation (O, Ω, Θ)','P, NP, NP-complete']};
+let done=store.get('daa_done',{});
+function renderTopics(){
+  let html='',total=0,ok=0;
+  for(const g in TOPICS){
+    html+='<div class="grp">'+g+'</div>';
+    TOPICS[g].forEach(t=>{total++;const k=t.replace(/<[^>]+>|&amp;/g,'');const c=!!done[k];if(c)ok++;
+      html+='<label class="t'+(c?' done':'')+'"><input type="checkbox" data-k="'+k.replace(/"/g,'')+'"'+(c?' checked':'')+'><span>'+t+'</span></label>'});
+  }
+  $('#topics').innerHTML=html;
+  const p=Math.round(ok/total*100);
+  $('#pct').textContent=p+'%';$('#arc').style.strokeDashoffset=314.16*(1-p/100);
+  $('#pcttxt').textContent=ok+' of '+total+' topics done';
+  document.querySelectorAll('#topics input').forEach(i=>i.onchange=()=>{done[i.dataset.k]=i.checked;store.set('daa_done',done);renderTopics()});
+}
+function allKeys(){return Object.values(TOPICS).flat().map(t=>t.replace(/<[^>]+>|&amp;/g,''))}
+$('#all').onclick=()=>{allKeys().forEach(k=>done[k]=true);store.set('daa_done',done);renderTopics()};
+$('#none').onclick=()=>{done={};store.set('daa_done',done);renderTopics()};
+renderTopics();
+
+/* ---- flashcards ---- */
+const CARDS=[
+ ['D&C','Master theorem: how do you decide the case for T(n)=aT(n/b)+f(n)?','Compare f(n) with n^(log_b a). Smaller → Θ(n^log_b a); equal → Θ(n^log_b a · log n); larger (with regularity) → Θ(f(n)).'],
+ ['D&C','Merge sort recurrence and cost?','T(n)=2T(n/2)+Θ(n) → Θ(n log n) in best, average and worst case. Needs Θ(n) extra space.'],
+ ['D&C','When does quick sort hit its worst case?','When partitions are maximally unbalanced (e.g. sorted input with first/last pivot): Θ(n²). Average Θ(n log n).'],
+ ['D&C','How many multiplications does Strassen use, and what is the cost?','7 block products instead of 8. T(n)=7T(n/2)+Θ(n²) → Θ(n^log₂7) ≈ Θ(n^2.81).'],
+ ['Greedy','What two properties justify a greedy algorithm?','Greedy-choice property (a local optimum can be part of a global optimum) and optimal substructure.'],
+ ['Greedy','Kruskal vs Prim?','Kruskal: sort edges, add if no cycle (union-find), O(E log E). Prim: grow one tree from a vertex using a priority queue, O(E log V).'],
+ ['Greedy','Fractional vs 0/1 knapsack with greedy?','Sorting by value/weight ratio is optimal for fractional knapsack, but NOT guaranteed for 0/1 knapsack.'],
+ ['Greedy','Huffman coding in one line?','Repeatedly merge the two lowest-frequency nodes; yields an optimal prefix code in O(n log n).'],
+ ['DP','When is dynamic programming applicable?','Optimal substructure plus overlapping subproblems; store answers (memoise or tabulate) to avoid recomputation.'],
+ ['DP','0/1 knapsack DP complexity?','O(nW) time and space (W = capacity). Pseudo-polynomial, not polynomial in input size.'],
+ ['DP','LCS recurrence?','If x_i = y_j: L[i][j] = L[i-1][j-1] + 1; else max(L[i-1][j], L[i][j-1]). Time O(mn).'],
+ ['Graph','Dijkstra: what it solves and its limit?','Single-source shortest paths with non-negative weights; O((V+E) log V) with a binary heap. Fails on negative edges.'],
+ ['Graph','Bellman-Ford vs Floyd-Warshall?','Bellman-Ford: single source, handles negative edges and detects negative cycles, O(VE). Floyd-Warshall: all pairs, DP, O(V³).'],
+ ['Complexity','O vs Ω vs Θ?','O = upper bound, Ω = lower bound, Θ = tight bound (both).'],
+ ['Backtrack','How does N-Queens use backtracking?','Place queens row by row; if a placement conflicts (column or diagonal), prune that branch and backtrack.']
+];
+const CATS=['All','D&C','Greedy','DP','Graph','Complexity','Backtrack'];
+let cat='All',list=[],idx=0,known=new Set(store.get('daa_known',[]));
+function buildList(){list=CARDS.filter(c=>cat==='All'||c[0]===cat);idx=0}
+function renderCard(){
+  $('#fc').classList.remove('flip');
+  if(!list.length){$('#fq').textContent='No cards in this topic.';$('#fa').textContent='';$('#fcat').textContent='';return}
+  const c=list[idx];$('#fcat').textContent=c[0]+'  ·  '+(idx+1)+'/'+list.length+(known.has(c[1])?'  ✓':'');
+  $('#fq').textContent=c[1];$('#fa').textContent=c[2];
+  const k=list.filter(x=>known.has(x[1])).length;
+  $('#fstat').textContent=k+' of '+list.length+' marked as known';
+  $('#fbar').style.width=(list.length?k/list.length*100:0)+'%';
+}
+function renderChips(){
+  $('#chips').innerHTML='';
+  CATS.forEach(c=>{const b=document.createElement('button');b.textContent=c;if(c===cat)b.className='on';
+    b.onclick=()=>{cat=c;buildList();renderChips();renderCard()};$('#chips').appendChild(b)});
+}
+const flip=()=>$('#fc').classList.toggle('flip');
+const step=d=>{if(!list.length)return;idx=(idx+d+list.length)%list.length;renderCard()};
+$('#fc').onclick=flip;$('#fnext').onclick=()=>step(1);$('#fprev').onclick=()=>step(-1);
+$('#fshuf').onclick=()=>{for(let i=list.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[list[i],list[j]]=[list[j],list[i]]}idx=0;renderCard()};
+$('#fknow').onclick=()=>{if(!list.length)return;const q=list[idx][1];known.has(q)?known.delete(q):known.add(q);store.set('daa_known',[...known]);renderCard()};
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if(e.key===' '){e.preventDefault();flip()}else if(e.key==='ArrowRight')step(1);else if(e.key==='ArrowLeft')step(-1);
+});
+buildList();renderChips();renderCard();
+
+/* ---- quiz ---- */
+const QS=[
+ ['Worst-case time of merge sort?',['O(n)','O(n log n)','O(n²)','O(log n)'],1],
+ ['Which algorithm is greedy?',['Kruskal\'s MST','Floyd-Warshall','LCS','Matrix chain multiplication'],0],
+ ['Time complexity of the 0/1 knapsack DP table?',['O(n)','O(2ⁿ)','O(nW)','O(n log W)'],2],
+ ['Dijkstra\'s algorithm can fail when the graph has…',['Cycles','Negative edge weights','Many vertices','Undirected edges'],1],
+ ['Strassen\'s algorithm multiplies 2×2 blocks using how many products?',['5','6','7','8'],2],
+ ['T(n)=2T(n/2)+n² solves to…',['Θ(n log n)','Θ(n²)','Θ(n³)','Θ(n)'],1],
+ ['Backtracking solves N-Queens by…',['Trying all boards blindly','Abandoning partial placements that conflict','Sorting the queens','Using a heap'],1],
+ ['Which is NOT Θ(n log n) in the worst case?',['Merge sort','Heap sort','Quick sort','All are'],2]
+];
+let order=[],qi=0,score=0,streak=0,best=store.get('daa_best',0),locked=false;
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function startQuiz(){order=shuffle(QS.map((_,i)=>i));qi=0;score=0;streak=0;renderQ()}
+function renderQ(){
+  const box=$('#qbox');
+  if(qi>=order.length){
+    if(score>best){best=score;store.set('daa_best',best)}
+    box.innerHTML='<div class="big">'+score+' / '+QS.length+'</div><p class="mute">Best so far: '+best+' / '+QS.length+'</p><p>'+(score>=7?'Excellent. Exam-ready on the basics.':score>=5?'Good. Revisit the cards you missed.':'Flip through the cards, then retry.')+'</p><button id="again">↺ Try again</button>';
+    $('#again').onclick=startQuiz;return;
+  }
+  const q=QS[order[qi]];locked=false;
+  box.innerHTML='<div class="mute">Question '+(qi+1)+' of '+QS.length+' · Score '+score+(streak>1?' · 🔥 streak '+streak:'')+'</div><div class="bar"><i style="width:'+(qi/QS.length*100)+'%"></i></div><p style="font-weight:600">'+q[0]+'</p><div id="opts"></div><p id="fb" class="mute"></p><button id="nx" style="display:none">Next →</button>';
+  q[1].forEach((t,i)=>{const b=document.createElement('button');b.className='opt';b.textContent=t;
+    b.onclick=()=>{if(locked)return;locked=true;const ok=i===q[2];
+      if(ok){score++;streak++}else streak=0;
+      [...$('#opts').children].forEach((x,j)=>{if(j===q[2])x.classList.add('right');else if(j===i)x.classList.add('wrong')});
+      $('#fb').innerHTML=ok?'<span class="ok">Correct!</span>':'<span class="bad">Answer: '+q[1][q[2]]+'</span>';
+      $('#nx').style.display='inline-block';$('#nx').textContent=qi===order.length-1?'See score →':'Next →';
+      $('#nx').onclick=()=>{qi++;renderQ()};
+    };$('#opts').appendChild(b)});
+}
+startQuiz();
+</script>
+</body>
+</html>
