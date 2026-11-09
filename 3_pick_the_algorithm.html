@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pick-the-Algorithm - Decision Helper</title>
+<style>
+:root{--bg:#0a0f1f;--panel:#131a33;--line:#27316b;--ink:#e9edff;--mute:#9aa6d1;--a:#ffb703;--b:#4cc9f0;--c:#f72585;--ok:#3ddc97}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(800px 500px at 100% -10%,#f7258522,transparent),radial-gradient(800px 500px at -10% 100%,#4cc9f018,transparent),var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px;min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto}
+h1{font-size:clamp(24px,5vw,40px);margin:.2em 0 0}
+h1 span{background:linear-gradient(90deg,var(--c),var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mute);margin:.2em 0 14px}
+.cols{display:grid;gap:14px;grid-template-columns:minmax(280px,360px) 1fr;align-items:start}
+@media(max-width:780px){.cols{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--b)}
+button{font:inherit;color:var(--ink);background:#1c2550;border:1px solid var(--line);border-radius:10px;padding:8px 12px;cursor:pointer}
+button:hover{border-color:var(--b)}
+.row{display:flex;flex-wrap:wrap;gap:8px}
+.sl{margin:12px 0}.sl .top{display:flex;justify-content:space-between;font-size:14px}
+.sl .top b{color:var(--a)}
+input[type=range]{width:100%;accent-color:var(--c)}
+.sw{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:14px;cursor:pointer}
+.sw input{width:18px;height:18px;accent-color:var(--ok)}
+.list{position:relative}
+.item{position:absolute;left:0;right:0;height:62px;background:#0e1430;border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:10px;padding:0 12px;cursor:pointer;transition:top .45s cubic-bezier(.3,.8,.3,1),opacity .3s,border-color .2s}
+.item:hover{border-color:var(--b)}.item.sel{border-color:var(--a);box-shadow:0 0 0 1px var(--a)}
+.item.off{opacity:.35}
+.rk{font-weight:800;font-size:20px;width:28px;color:var(--a)}
+.nm{flex:0 0 120px;font-weight:700;font-size:15px}
+.bw{flex:1;height:12px;background:#1a2347;border-radius:8px;overflow:hidden}.bw i{display:block;height:100%;background:linear-gradient(90deg,var(--c),var(--a));width:0;transition:width .45s}
+.sc{width:44px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.win{font-size:clamp(18px,3.4vw,26px);margin:0 0 10px}
+.win b{color:var(--ok)}
+.seg{display:flex;height:14px;border-radius:8px;overflow:hidden;margin:8px 0}
+.seg i{display:block;height:100%}
+.leg{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--mute)}.leg span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;background:var(--cc)}
+.note{color:var(--mute);font-size:14px;line-height:1.5}
+.tag{display:inline-block;font-size:11px;padding:2px 7px;border-radius:6px;background:#1a2347;color:var(--mute);margin-left:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Pick-the-<span>Algorithm</span></h1>
+  <p class="sub">Which sorting algorithm should you choose? Tell the helper what matters to you. The ranking re-orders live. Scores are 1 to 10 study-guide ratings, not benchmarks.</p>
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h2>What matters to you?</h2>
+        <div id="sliders"></div>
+        <label class="sw"><input type="checkbox" id="stable"> Must be stable (equal keys keep order)</label>
+        <label class="sw"><input type="checkbox" id="ints"> Keys are small integers (unlocks Counting sort)</label>
+      </div>
+      <div class="card">
+        <h2>Presets</h2>
+        <div class="row" id="presets"></div>
+        <div class="row" style="margin-top:10px"><button id="reset">↺ Reset</button></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <p class="win" id="win"></p>
+        <div class="list" id="list"></div>
+      </div>
+      <div class="card">
+        <h2 id="dt">Why this rank?</h2>
+        <div class="seg" id="seg"></div>
+        <div class="leg" id="leg"></div>
+        <p class="note" id="dn" style="margin-top:12px"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const CRIT=[
+ {k:'speed',n:'Speed on average input',c:'#f72585'},
+ {k:'worst',n:'Worst-case guarantee',c:'#ffb703'},
+ {k:'mem',n:'Memory frugality',c:'#4cc9f0'},
+ {k:'simple',n:'Easy to code &amp; explain',c:'#3ddc97'}
+];
+const ALG=[
+ {id:'merge',n:'Merge sort',stable:true,s:{speed:8,worst:10,mem:4,simple:6},d:'Θ(n log n) in every case and stable, but needs Θ(n) extra space. The safe all-rounder and the standard divide-and-conquer example.'},
+ {id:'quick',n:'Quick sort',stable:false,s:{speed:10,worst:3,mem:8,simple:6},d:'Fastest in practice on average thanks to cache-friendly in-place partitioning, but Θ(n²) worst case with bad pivots and not stable.'},
+ {id:'heap',n:'Heap sort',stable:false,s:{speed:7,worst:10,mem:10,simple:5},d:'Θ(n log n) worst case with O(1) extra space. Not stable and slower in practice than quick sort due to poor locality.'},
+ {id:'ins',n:'Insertion sort',stable:true,s:{speed:2,worst:1,mem:10,simple:10},d:'Θ(n²) worst case but tiny, stable, in-place and excellent on small or nearly sorted data. Often used inside hybrid sorts.'},
+ {id:'count',n:'Counting sort',stable:true,needsInts:true,s:{speed:10,worst:9,mem:3,simple:7},d:'Θ(n + k) when keys are integers in a small range k. Stable, not comparison-based, but needs extra memory proportional to k.'}
+];
+const DEF={speed:5,worst:5,mem:5,simple:5};
+let W={...DEF},sel='merge';
+const PRE={
+ 'Exam mode':{speed:3,worst:6,mem:2,simple:9,stable:false,ints:false},
+ 'Big data':{speed:9,worst:8,mem:3,simple:2,stable:true,ints:false},
+ 'Tiny device':{speed:3,worst:7,mem:10,simple:6,stable:false,ints:false},
+ 'Exam scores 0-100':{speed:8,worst:5,mem:4,simple:4,stable:true,ints:true}
+};
+const ROW=70;
+
+function buildSliders(){
+  $('#sliders').innerHTML='';
+  CRIT.forEach(c=>{
+    const d=document.createElement('div');d.className='sl';
+    d.innerHTML='<div class="top"><span>'+c.n+'</span><b id="v_'+c.k+'">'+W[c.k]+'</b></div><input type="range" min="0" max="10" value="'+W[c.k]+'" id="r_'+c.k+'">';
+    $('#sliders').appendChild(d);
+    d.querySelector('input').addEventListener('input',e=>{W[c.k]=+e.target.value;$('#v_'+c.k).textContent=W[c.k];update()});
+  });
+}
+function eligible(a){
+  if(a.needsInts&&!$('#ints').checked)return false;
+  if($('#stable').checked&&!a.stable)return false;
+  return true;
+}
+function score(a){
+  const tw=CRIT.reduce((s,c)=>s+W[c.k],0);
+  if(tw===0)return 0;
+  return CRIT.reduce((s,c)=>s+W[c.k]*a.s[c.k],0)/tw;
+}
+function build(){
+  const L=$('#list');L.innerHTML='';
+  ALG.forEach(a=>{
+    const el=document.createElement('div');el.className='item';el.id='i_'+a.id;
+    el.innerHTML='<div class="rk"></div><div class="nm">'+a.n+(a.stable?'<span class="tag">stable</span>':'')+'</div><div class="bw"><i></i></div><div class="sc"></div>';
+    el.onclick=()=>{sel=a.id;update()};
+    L.appendChild(el);
+  });
+  L.style.height=(ALG.length*ROW)+'px';
+}
+function update(){
+  const rows=ALG.map(a=>({a,ok:eligible(a),s:score(a)}));
+  const ranked=rows.filter(r=>r.ok).sort((x,y)=>y.s-x.s);
+  const out=rows.filter(r=>!r.ok);
+  const pos={};ranked.forEach((r,i)=>pos[r.a.id]=i);out.forEach((r,i)=>pos[r.a.id]=ranked.length+i);
+  rows.forEach(r=>{
+    const el=$('#i_'+r.a.id);
+    el.style.top=(pos[r.a.id]*ROW)+'px';
+    el.classList.toggle('off',!r.ok);
+    el.classList.toggle('sel',sel===r.a.id);
+    el.querySelector('.rk').textContent=r.ok?(pos[r.a.id]+1):'–';
+    el.querySelector('.bw i').style.width=(r.ok?r.s*10:0)+'%';
+    el.querySelector('.sc').textContent=r.ok?r.s.toFixed(1):'n/a';
+  });
+  $('#win').innerHTML=ranked.length?'Best fit: <b>'+ranked[0].a.n+'</b>'+(ranked.length>1?' <span class="note">(runner-up: '+ranked[1].a.n+')</span>':''):'No algorithm meets all your constraints.';
+  if(!eligible(ALG.find(a=>a.id===sel))&&ranked.length)sel=ranked[0].a.id;
+  detail();
+}
+function detail(){
+  const a=ALG.find(x=>x.id===sel);
+  $('#dt').textContent='Why '+a.n+' scores the way it does';
+  const tw=CRIT.reduce((s,c)=>s+W[c.k],0)||1;
+  $('#seg').innerHTML=CRIT.map(c=>{const part=W[c.k]*a.s[c.k]/tw;return '<i style="width:'+(part*10)+'%;background:'+c.c+'" title="'+c.n+'"></i>'}).join('');
+  $('#leg').innerHTML=CRIT.map(c=>{const part=W[c.k]*a.s[c.k]/tw;return '<span style="--cc:'+c.c+'">'+c.n+': '+part.toFixed(1)+'</span>'}).join('');
+  $('#dn').textContent=a.d;
+}
+function presets(){
+  Object.keys(PRE).forEach(n=>{
+    const b=document.createElement('button');b.textContent=n;
+    b.onclick=()=>{const p=PRE[n];CRIT.forEach(c=>W[c.k]=p[c.k]);$('#stable').checked=p.stable;$('#ints').checked=p.ints;buildSliders();update()};
+    $('#presets').appendChild(b);
+  });
+}
+$('#stable').addEventListener('change',update);$('#ints').addEventListener('change',update);
+$('#reset').onclick=()=>{W={...DEF};$('#stable').checked=false;$('#ints').checked=false;sel='merge';buildSliders();update()};
+buildSliders();build();presets();update();
+</script>
+</body>
+</html>
